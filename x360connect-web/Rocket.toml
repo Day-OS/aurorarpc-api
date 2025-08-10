@@ -1,0 +1,2 @@
+[default.databases.xboxrpc]
+url = "mongodb://localhost:27017"

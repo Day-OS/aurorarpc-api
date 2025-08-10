@@ -1,0 +1,24 @@
+<button  
+    hx-post="/profile/keys"
+    hx-swap="none"
+    _="on htmx:afterRequest trigger refreshTokens on closest #tokens"
+>
+    Criar novo token
+</button>
+
+{% for token in access_tokens %}
+  <div>
+    <div>
+      {{loop.index}}. {{token.key}} {{token.date}}
+    </div>
+    <div>
+      <button  
+          hx-delete="/profile/keys?key={{loop.index0}}"
+          hx-swap="none"
+          _="on htmx:afterRequest trigger refreshTokens on closest #tokens"
+      >
+          X
+      </button>
+    </div>
+  </div>
+{% endfor %}

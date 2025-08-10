@@ -1,0 +1,8 @@
+{% extends "base" %}
+{% block body %}
+    <h1>Profile</h1>
+    <div id="tokens" hx-get="/profile/keys" hx-swap="innerHTML" hx-trigger="load, refreshTokens"></div>
+
+{% endblock body %}
+
+    

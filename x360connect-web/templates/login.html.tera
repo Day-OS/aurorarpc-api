@@ -1,0 +1,9 @@
+{% extends "base" %}
+{% block body %}
+    <h1>Login</h1>
+    <a href="/login-req">
+    LOGIN
+    </a>
+{% endblock body %}
+
+    
