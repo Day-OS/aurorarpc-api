@@ -4795,6 +4795,7 @@ name = "x360connect-linker"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "bytes",
  "clap",
  "config",
  "futures",
@@ -4819,6 +4820,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
+ "bytes",
  "dotenvy",
  "log",
  "oauth2",

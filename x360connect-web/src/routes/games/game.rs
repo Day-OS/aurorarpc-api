@@ -46,7 +46,7 @@ pub async fn game(
 
     let activity = Activity{ title: game.title, icon: game.icon_url, player: player};
     let json = serde_json::to_string(&activity).map_err(|e| {
-        log::error!("Failed to serialize activity: {e}");
+        log::error!("{e}");
         Status::InternalServerError
     })?;
     Ok(

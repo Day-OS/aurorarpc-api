@@ -18,7 +18,7 @@ mod user;
 mod utils;
 mod game;
 mod document;
-use routes::assets;
+use routes::games;
 use rocket_okapi::{openapi_get_routes, swagger_ui::*};
 
 use routes::{login::login, auth::auth};
@@ -77,7 +77,7 @@ fn rocket() -> _ {
     // .manage(title_ids)
     .mount("/assets", FileServer::from("./assets"))
     .mount("/", routes![
-        index, assets::game, auth, 
+        index, games::game::game, auth, 
         login, login_req, 
         profile, profile_keys,
         create_profile_keys, delete_profile_keys,

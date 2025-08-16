@@ -12,6 +12,7 @@ pub(crate) const COLLECTION_NAME: &'static str = "game";
 pub struct Game { 
     #[serde(rename = "_id", skip_serializing_if = "Option::is_none")] 
     pub id: Option<ObjectId>, 
+    pub game_id: String,
     pub icon_url: String,
     pub title: String,
     pub description: String,
@@ -21,16 +22,21 @@ pub struct Game {
     pub achievements: OrderSet<Achievement>
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)] 
+pub enum AchievementType{
+
+}
+
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)] 
 pub struct Achievement{
     pub id: String,
-    pub game_id: String,
     pub icon_url: String,
     pub title: String,
     pub description: String,
     pub gamescode: u8,
-    pub live_dependant: bool
+    pub live_dependant: bool,
+    pub achvmnt_type: AchievementType
 }
 
 impl Document for Game{
@@ -59,5 +65,9 @@ impl Game{
         let collection = db.database(DATABASE_NAME)
             .collection::<Self>(COLLECTION_NAME);
         Ok(collection.find_one(doc!{ "game_id": id }, None).await?)
+    }
+
+    pub fn achivement_image_name(&self, uuid: String) -> String{
+        format!("{}_achievement_{}", self.game_id, uuid)
     }
 }
