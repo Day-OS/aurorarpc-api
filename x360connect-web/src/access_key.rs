@@ -1,7 +1,14 @@
 use rocket::{http::Status, request::{FromRequest, Outcome}, Request};
-
 pub async fn get_key<'r>(req: &'r Request<'_>) -> Option<String> {
-    req.headers().get_one("x-access-key").map(|string| string.to_string())
+    req.headers()
+        .get_one("Authorization")
+        .and_then(|header| {
+            if let Some(token) = header.strip_prefix("Bearer ") {
+                Some(token.to_string())
+            } else {
+                None
+            }
+        })
 }
 
 pub struct AccessKeyGuard(pub String);

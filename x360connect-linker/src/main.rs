@@ -29,7 +29,7 @@ struct Args {
 
 #[derive(Serialize, Deserialize)]
 struct AppConfig{
-    key: Option<String>,
+    token: Option<String>,
     api_url: Option<String>,
     user: String,
     password: String,
@@ -38,7 +38,7 @@ impl Default for AppConfig{
     fn default() -> Self {
         Self { 
             api_url: Some("http://xbox.daytheipc.com".to_string()),
-            key: None,
+            token: None,
             user: "xboxhttp".to_string(),
             password: "xboxhttp".to_string()
         }
@@ -93,7 +93,8 @@ async fn main_loop(rpc: &mut RPC, settings: &AppConfig) -> anyhow::Result<()>{
 
                 },
                 None => {
-                    let data = game_data::get_activity_information(&title.titleid, &url, api_url.clone(), token.clone()).await;
+                    let game_id_trimmed = &title.titleid[2..].to_owned();
+                    let data = game_data::get_activity_information(&game_id_trimmed, &url, api_url.clone(), token.clone(), settings.token.clone()).await;
                     match data {
                         Ok(activity) => {game_data = Some(activity);},
                         Err(e) => log::error!("{e}"),
@@ -152,7 +153,7 @@ async fn main() -> anyhow::Result<()> {
             Some(api_url) => {
                 match verify_key(api_url, key.clone()).await? {
                     true => {
-                        settings.key = Some(key.clone());
+                        settings.token = Some(key.clone());
                         settings.save(config_path.to_string())?;
                         info!("Key {key} registered!");
                     },
@@ -174,24 +175,24 @@ async fn main() -> anyhow::Result<()> {
     }
 
     // In case the user has an outdated key that does not work anymore
-    if let Some(key) = settings.key.clone() && let Some(url) = settings.api_url.clone(){
+    if let Some(key) = settings.token.clone() && let Some(url) = settings.api_url.clone(){
         match verify_key(url.clone(), key).await {
             Ok(was_successful) => {
                 if !was_successful{
-                    settings.key = None;
+                    settings.token = None;
                     settings.save(config_path.to_string())?;
                     return Err(anyhow::anyhow!("The current key seems to be either invalid or expired. Please, insert a new key using the '--key' parameter! "))
                 }
             },
             Err(e) => {
-                settings.key = None;
+                settings.token = None;
                 settings.save(config_path.to_string())?;
                 return Err(anyhow::anyhow!("{e}"))
             },
         };
     }
 
-    if settings.key.is_none() && args.key.is_none(){
+    if settings.token.is_none() && args.key.is_none(){
         info!("NO KEY FOUND!");
         info!(
             "Running this software without being logged may not show some images from games that \

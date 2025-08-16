@@ -1,6 +1,5 @@
 use std::{collections::HashSet, vec};
 
-use anyhow::Ok;
 use ordermap::OrderSet;
 use rocket::http::CookieJar;
 use rocket_db_pools::mongodb::bson::{doc, oid::ObjectId, DateTime};

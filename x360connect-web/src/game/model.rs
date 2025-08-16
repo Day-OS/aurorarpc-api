@@ -1,6 +1,7 @@
 use ordermap::OrderSet;
 use rocket_db_pools::mongodb::bson::{doc, oid::ObjectId};
 use serde::{Deserialize, Serialize};
+use x360connect_global::{schm_achivements, schm_game::SchmGame};
 
 use crate::{document::{save, Document}, DATABASE_NAME};
 
@@ -13,30 +14,16 @@ pub struct Game {
     #[serde(rename = "_id", skip_serializing_if = "Option::is_none")] 
     pub id: Option<ObjectId>, 
     pub game_id: String,
-    pub icon_url: String,
-    pub title: String,
-    pub description: String,
-    pub developer: String,
-    pub publisher: String,
-    pub images_url: Vec<String>,
+    pub schema: SchmGame,
     pub achievements: OrderSet<Achievement>
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)] 
-pub enum AchievementType{
-
 }
 
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)] 
 pub struct Achievement{
     pub id: String,
+    pub schema: schm_achivements::Achievement,
     pub icon_url: String,
-    pub title: String,
-    pub description: String,
-    pub gamescode: u8,
-    pub live_dependant: bool,
-    pub achvmnt_type: AchievementType
 }
 
 impl Document for Game{
@@ -69,5 +56,20 @@ impl Game{
 
     pub fn achivement_image_name(&self, uuid: String) -> String{
         format!("{}_achievement_{}", self.game_id, uuid)
+    }
+
+    pub fn get_name(&self) -> String{
+        self.schema.fulltitle.clone().unwrap_or(
+            self.schema.title_id.clone()
+            .unwrap_or("Undefined".to_owned()
+        ))
+    }
+    pub fn get_icon_url(&self) -> String{
+        if let Some(images) = &self.schema.images{
+            if let Some(icon) = &images.icon{
+                return icon.clone()
+            }
+        }
+        return "xbox-360-logo".to_owned()
     }
 }

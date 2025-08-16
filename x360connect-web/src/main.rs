@@ -6,6 +6,9 @@ use rocket::http::CookieJar;
 use rocket_db_pools::mongodb;
 use rocket_db_pools::Database;
 use rocket_dyn_templates::Template;
+use crate::routes::games::upload::achievement_upload;
+use crate::routes::games::upload::achievement_upload_i;
+use crate::routes::games::upload::game_upload;
 use crate::routes::keys::verify_key;
 use crate::routes::login_req::login_req;
 use crate::routes::profile::keys::create_profile_keys;
@@ -18,6 +21,7 @@ mod user;
 mod utils;
 mod game;
 mod document;
+mod log_activity;
 use routes::games;
 use rocket_okapi::{openapi_get_routes, swagger_ui::*};
 
@@ -81,7 +85,10 @@ fn rocket() -> _ {
         login, login_req, 
         profile, profile_keys,
         create_profile_keys, delete_profile_keys,
-        verify_key
+        verify_key,
+        game_upload,
+        achievement_upload,
+        achievement_upload_i,
     ])
     .mount("/", openapi_get_routes![])
     .mount(

@@ -1,12 +1,12 @@
-use rocket::{data::{Outcome, ToByteUnit}, futures::AsyncWriteExt, http::Status, response::content::RawJson, serde::json::Json, tokio::io::AsyncReadExt, Data};
+use rocket::{data::ToByteUnit, futures::AsyncWriteExt, http::Status, serde::json::Json, tokio::io::AsyncReadExt, Data};
 use rocket_db_pools::Connection;
-use x360connect_global::{activity::{Activity, Player}, schm_game::SchmGame};
+use x360connect_global::schm_game::SchmGame;
 
 use crate::{access_key::AccessKeyGuard, game::model::Game, user::model::User, MongoDB, DATABASE_NAME};
 
 #[post("/game_upload/<id>", data = "<input>")]
 pub async fn game_upload<'r>(
-    id: String,
+    id: &str,
     access_key: AccessKeyGuard,
     db: Connection<MongoDB>,
     input: Json<SchmGame>
@@ -16,7 +16,8 @@ pub async fn game_upload<'r>(
         log::error!("{e}");
         Status::InternalServerError
     })?.ok_or(Status::Forbidden)?;
-    let mut picture = "assets/default_image.png".to_owned();
+
+    
 
     Ok(
         Status::Ok

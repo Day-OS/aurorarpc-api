@@ -6,7 +6,7 @@ use crate::{access_key::OptionalAccessKeyGuard, game::model::Game, user::model::
 
 #[get("/game/<id>")]
 pub async fn game(
-    id: String,
+    id: &str,
     access_key: OptionalAccessKeyGuard,
     db: Connection<MongoDB>
 ) -> Result<RawJson<String>, Status> {
@@ -37,14 +37,14 @@ pub async fn game(
         
     }
     
-    let game = Game::find_by_id(&db, id).await.map_err(|e| {
+    let game = Game::find_by_id(&db, id.to_string()).await.map_err(|e| {
         println!("{e}");
         Status::InternalServerError
     })?.ok_or(
         Status::NotFound
     )?;
 
-    let activity = Activity{ title: game.title, icon: game.icon_url, player: player};
+    let activity = Activity{ title: game.get_name(), icon: game.get_icon_url(), player: player};
     let json = serde_json::to_string(&activity).map_err(|e| {
         log::error!("{e}");
         Status::InternalServerError
