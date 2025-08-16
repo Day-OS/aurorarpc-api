@@ -2202,6 +2202,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "ordermap"
+version = "0.5.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6d6bff06e4a5dc6416bead102d3e63c480dd852ffbb278bf8cfeb4966b329609"
+dependencies = [
+ "indexmap 2.10.0",
+ "serde",
+]
+
+[[package]]
 name = "overload"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4812,6 +4822,7 @@ dependencies = [
  "dotenvy",
  "log",
  "oauth2",
+ "ordermap",
  "rand 0.9.2",
  "reqwest 0.12.23",
  "rocket",
