@@ -1,4 +1,3 @@
-use serde::{Deserialize, Serialize};
 use x360connect_global::activity::Activity;
 
 

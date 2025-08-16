@@ -19,8 +19,6 @@ mod connection;
 mod database;
 mod rpc;
 
-const ACCESS_KEY: &'static str = "ACCESS_KEY"; 
-
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
