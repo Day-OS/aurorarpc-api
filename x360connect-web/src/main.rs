@@ -6,7 +6,7 @@ use rocket::http::CookieJar;
 use rocket_db_pools::mongodb;
 use rocket_db_pools::Database;
 use rocket_dyn_templates::Template;
-use crate::routes::games::download::get_achievement;
+use crate::routes::games::download::get_file;
 use crate::routes::games::upload::achievement_upload;
 use crate::routes::games::upload::achievement_upload_i;
 use crate::routes::games::upload::game_upload;
@@ -90,7 +90,7 @@ fn rocket() -> _ {
         game_upload,
         achievement_upload,
         achievement_upload_i,
-        get_achievement
+        get_file
     ])
     .mount("/", openapi_get_routes![])
     .mount(

@@ -28,12 +28,17 @@ pub async fn game_upload<'r>(
         return Err(Status::Conflict);
     }
 
-    let game = Game{ 
+    let mut game = Game{ 
         id: None, 
         game_id: id.to_string(), 
         schema: input.into_inner(), 
         achievements: OrderSet::new()
     };
+
+    game.upload_own_images(&db).await.map_err(|e|{
+        error!("Error while trying to change the soure of the images from game {} - {e}", game.get_name());
+        Status::InternalServerError
+    })?;
 
     _ = game.new(&db).await.map_err(|e|{
         log::error!("Could not save game. {e}");

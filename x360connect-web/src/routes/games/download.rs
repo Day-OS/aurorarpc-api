@@ -1,24 +1,14 @@
-use rocket::{futures::AsyncReadExt, http::{ContentType, Status}, response::status::Custom};
-use rocket_db_pools::{mongodb::bson, Connection};
+use rocket::{futures::AsyncReadExt, http::{ContentType, Status}};
+use rocket_db_pools::Connection;
 
 use crate::{game::model::Game, MongoDB, DATABASE_NAME};
 
 
-#[get("/achievement/<id>/<uuid>")]
-pub async fn get_achievement<'r>(
-    id: String,
-    uuid: String,
+#[get("/file/<file_name>")]
+pub async fn get_file<'r>(
+    file_name: String,
     db: Connection<MongoDB>,
 ) -> Result<(ContentType, Vec<u8>), Status> {
-   
-
-    let game = Game::find_by_id(&db, id).await.map_err(|e|{
-        log::error!("{e}");
-        Status::InternalServerError
-    })?.ok_or(Status::NotFound)?;
-
-    let file_name = game.achivement_image_name(uuid);
-
     let mut buf: Vec<u8> = vec![];
 
     let bucket = db.database(DATABASE_NAME).gridfs_bucket(None);

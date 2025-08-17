@@ -1,6 +1,7 @@
 use anyhow::Ok;
 use reqwest::StatusCode;
 use x360connect_global::{activity::Activity, schm_achivements, schm_game};
+use std::fmt::format;
 use std::future::Future;
 use std::pin::Pin;
 
@@ -156,7 +157,9 @@ pub fn get_activity_information(
             log::debug!("Title {} was found in the API registries", game_id);
 
                 //In the case the game was correctly found, return the activity generated
-                return Ok(resp.json::<Activity>().await?);
+                let mut result = resp.json::<Activity>().await?;
+                result.icon = format!("{api_url}/file/{}",result.icon);
+                return Ok(result);
             }
 
             //In the eventual case the game was not feeded to the api yet, we feed it!
