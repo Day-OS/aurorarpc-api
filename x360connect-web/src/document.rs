@@ -22,3 +22,20 @@ where
 
     Ok(())
 }
+
+pub async fn new<T>(
+        doc: &T,
+        db: &rocket_db_pools::mongodb::Client,
+        
+    ) -> anyhow::Result<()>
+where
+    T: Document + serde::Serialize + Unpin + Sync,
+    {
+
+        db.database(&doc.database_name())
+            .collection::<T>(&doc.collection_name())
+            .insert_one(doc, None)
+            .await?;
+
+        Ok(())
+    }

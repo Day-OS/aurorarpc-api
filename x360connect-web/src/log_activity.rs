@@ -1,7 +1,7 @@
 use rocket_db_pools::mongodb::bson::{doc, oid::ObjectId};
 use serde::{Deserialize, Serialize};
 
-use crate::{document::{save, Document}, DATABASE_NAME};
+use crate::{document::{new, save, Document}, DATABASE_NAME};
 
 pub(crate) const COLLECTION_NAME: &'static str = "log";
 
@@ -12,6 +12,7 @@ pub struct Log {
     #[serde(rename = "_id", skip_serializing_if = "Option::is_none")] 
     pub id: Option<ObjectId>, 
     pub discord_id: String,
+    pub log_type: LogType
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)] 
@@ -41,8 +42,8 @@ impl Document for Log{
 }
 
 impl Log{
-    pub async fn save(&self, db: &rocket_db_pools::mongodb::Client) -> anyhow::Result<()>{
-        save(self, db).await?;
+    pub async fn new(&self, db: &rocket_db_pools::mongodb::Client) -> anyhow::Result<()>{
+        new(self, db).await?;
         Ok(())
     }
 }

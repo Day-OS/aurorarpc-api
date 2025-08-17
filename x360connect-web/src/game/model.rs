@@ -42,6 +42,10 @@ impl Document for Game{
 
 
 impl Game{
+    pub async fn new(&self, db: &rocket_db_pools::mongodb::Client) -> anyhow::Result<()>{
+        crate::document::new(self, db).await?;
+        Ok(())
+    }
     pub async fn save(&self, db: &rocket_db_pools::mongodb::Client) -> anyhow::Result<()>{
         save(self, db).await?;
         Ok(())

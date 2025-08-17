@@ -37,8 +37,9 @@ impl AchievementType {
 pub struct Achievement {
     pub id: u32,
     pub cred: u32,
-    pub hidden: u32, // 0: not hidden, 1: hidden
+    pub hidden: u8, // 0: not hidden, 1: hidden
     pub imageid: u16,
     pub strings: AchievementStrings,
-    pub ach_type: AchievementType,
+    #[serde(rename = "type")]
+    pub ach_type: u8,
 }
