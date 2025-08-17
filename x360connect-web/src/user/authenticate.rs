@@ -26,6 +26,7 @@ pub fn oauth_client() -> oauth2::Client<oauth2::StandardErrorResponse<oauth2::ba
 
     let client_id = env::var("OAUTH_ID").expect(&format!("OAUTH_ID {ERROR_MSG}"));
     let secret_id: String = env::var("OAUTH_SECRET").expect(&format!("OAUTH_SECRET {ERROR_MSG}"));
+    let url: String = env::var("OAUTH_URL").expect(&format!("OAUTH_URL {ERROR_MSG}"));
 
     BasicClient::new(
         ClientId::new(client_id),
@@ -36,7 +37,7 @@ pub fn oauth_client() -> oauth2::Client<oauth2::StandardErrorResponse<oauth2::ba
     .set_auth_uri(AuthUrl::new(DISCORD_AUTH_URL.to_owned()).unwrap())
     .set_token_uri(TokenUrl::new(DISCORD_TOKEN_URL.to_owned()).unwrap())
     // Seu redirect URL precisa estar cadastrado no Discord Dev Portal
-    .set_redirect_uri(RedirectUrl::new("http://localhost:8000/auth".to_string()).expect("Invalid redirect URL"))
+    .set_redirect_uri(RedirectUrl::new(url).expect("Invalid redirect URL"))
 }
 
 pub async fn get_discord_info(access_token: &String) -> anyhow::Result<DiscordUser> {

@@ -80,7 +80,7 @@ fn rocket() -> _ {
     .attach(Template::fairing())
     .attach(MongoDB::init())
     // .manage(title_ids)
-    .mount("/assets", FileServer::from("./assets"))
+    // .mount("/assets", FileServer::from("./assets"))
     .mount("/", routes![
         index, games::game::game, auth, 
         login, login_req, 
