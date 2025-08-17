@@ -27,7 +27,7 @@ pub async fn auth(
 
     let user = get_discord_info(access_token).await.unwrap();
 
-    let mut db_user = User::find_user_by_discord_id(&db, user.id.clone()).await.unwrap();
+    let mut db_user = User::find_by_discord_id(&db, user.id.clone()).await.unwrap();
     
     if db_user.is_none(){
         db_user = User::new(&db, user.id.clone(), user.username.clone()).await.ok();

@@ -6,11 +6,10 @@ pub async fn verify_key(api_url: String, key: String) -> anyhow::Result<bool> {
     let client = reqwest::Client::new();
     
     let mut map = HeaderMap::new();
-    map.insert("x-access-key", HeaderValue::from_str(&key)?);
     
     let status_code: reqwest::StatusCode = client
         .get(api_url.clone() + "/keys/verify")
-        .headers(map)
+        .bearer_auth(key)
         .send()
         .await?
         .status();

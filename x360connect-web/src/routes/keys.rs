@@ -1,7 +1,7 @@
 use rocket_db_pools::Connection;
-use rocket::{http::Status, request::Request};
+use rocket::http::Status;
 
-use crate::{access_key, user::model::{User}, MongoDB};
+use crate::{user::model::{User}, MongoDB};
 use crate::access_key::AccessKeyGuard;
 
 #[get("/keys/verify")]

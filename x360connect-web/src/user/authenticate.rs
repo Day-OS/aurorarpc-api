@@ -15,6 +15,7 @@ const DISCORD_API_URL: &str = "https://discord.com/api/users/@me";
 pub struct DiscordUser {
     pub id: String,
     pub username: String,
+    #[allow(dead_code)]
     pub discriminator: String,
     // pub avatar: Option<String>,
 }

@@ -8,7 +8,7 @@ use tokio::time::{Duration, timeout};
 use crate::connection::verify_connection::verify_connection;
 
 use crate::nova::utils::get_url;
-use crate::nova::{self, verify_connection};
+use crate::nova::verify_connection;
 
 fn mask_width<const SZ: usize>(octets: Option<[u8; SZ]>) -> u8 {
     octets
