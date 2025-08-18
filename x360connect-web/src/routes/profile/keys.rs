@@ -3,7 +3,7 @@ use rocket_db_pools::Connection;
 use rocket::http::Status;
 use rocket_dyn_templates::{context, Template};
 
-use crate::{user::model::User, MongoDB};
+use crate::{modules::user::model::User, MongoDB};
 
 
 #[get("/profile/keys")]

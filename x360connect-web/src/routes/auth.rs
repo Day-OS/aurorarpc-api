@@ -4,7 +4,7 @@ use oauth2::{
 };
 use rocket_db_pools::{mongodb::bson::doc, Connection};
 
-use crate::{user::{authenticate::{get_discord_info, oauth_client}, model::{User}}, MongoDB};
+use crate::{modules::user::{authenticate::{get_discord_info, oauth_client}, model::{User}}, MongoDB};
 
 
 #[get("/auth?<code>&<_state>")]

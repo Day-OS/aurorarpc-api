@@ -3,7 +3,7 @@ use rocket::{data::ToByteUnit, futures::AsyncWriteExt, http::Status, serde::json
 use rocket_db_pools::Connection;
 use x360connect_global::{schm_achivements, schm_game::SchmGame};
 
-use crate::{access_key::AccessKeyGuard, game::model::{Achievement, Game}, log_activity::Log, user::model::User, MongoDB, DATABASE_NAME};
+use crate::{access_key::AccessKeyGuard, log_activity::Log, modules::{game::model::{Achievement, Game}, user::model::User}, MongoDB, DATABASE_NAME};
 
 #[post("/game_upload/<id>", data = "<input>")]
 pub async fn game_upload<'r>(

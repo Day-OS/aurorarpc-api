@@ -1,7 +1,7 @@
 use rocket_db_pools::mongodb::bson::{doc, oid::ObjectId};
 use serde::{Deserialize, Serialize};
 
-use crate::{document::{new, Document}, DATABASE_NAME};
+use crate::{modules::document::{new, Document}, DATABASE_NAME};
 
 pub(crate) const COLLECTION_NAME: &'static str = "log";
 

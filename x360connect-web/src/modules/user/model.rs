@@ -5,7 +5,10 @@ use rocket::http::CookieJar;
 use rocket_db_pools::mongodb::bson::{doc, oid::ObjectId, DateTime};
 use serde::{Deserialize, Serialize};
 
-use crate::{document::{save, Document}, user::permission::Permission, utils::generate_key, DATABASE_NAME};
+use crate::{modules::{
+    document::{save, Document},
+    user::permission::Permission,
+}, utils::generate_key, DATABASE_NAME};
 
 pub(crate) const COLLECTION_NAME: &'static str = "user";
 

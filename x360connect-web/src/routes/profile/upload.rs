@@ -4,7 +4,7 @@ use rocket::{data::ToByteUnit, futures::AsyncWriteExt, http::Status, serde::json
 use rocket_db_pools::Connection;
 use x360connect_global::schm_profile::{SchmProfile, SchmProfileUploadResponse};
 
-use crate::{access_key::AccessKeyGuard, user::model::{Profile, User}, MongoDB, DATABASE_NAME};
+use crate::{access_key::AccessKeyGuard, modules::user::model::{Profile, User}, MongoDB, DATABASE_NAME};
 
 #[post("/profile_upload", data = "<input>")]
 pub async fn profile_upload<'r>(

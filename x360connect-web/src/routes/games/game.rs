@@ -2,7 +2,7 @@ use rocket::{http::Status, response::content::RawJson};
 use rocket_db_pools::Connection;
 use x360connect_global::activity::{Activity, Player};
 
-use crate::{access_key::OptionalAccessKeyGuard, game::model::Game, user::model::User, MongoDB};
+use crate::{access_key::OptionalAccessKeyGuard, modules::{game::model::Game, user::model::User}, MongoDB};
 
 #[get("/game/<id>")]
 pub async fn game(

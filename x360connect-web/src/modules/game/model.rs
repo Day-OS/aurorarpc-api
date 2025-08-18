@@ -9,7 +9,7 @@ use x360connect_global::schm_game::{BoxArt, Images};
 use x360connect_global::{schm_achivements, schm_game::SchmGame};
 use crate::rocket::futures::AsyncWriteExt;
 
-use crate::{document::{save, Document}, DATABASE_NAME};
+use crate::{modules::document::{save, Document}, DATABASE_NAME};
 
 pub(crate) const COLLECTION_NAME: &'static str = "game";
 
@@ -49,7 +49,7 @@ impl Document for Game{
 
 impl Game{
     pub async fn new(&self, db: &rocket_db_pools::mongodb::Client) -> anyhow::Result<()>{
-        crate::document::new(self, db).await?;
+        crate::modules::document::new(self, db).await?;
         Ok(())
     }
     pub async fn save(&self, db: &rocket_db_pools::mongodb::Client) -> anyhow::Result<()>{
