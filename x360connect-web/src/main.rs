@@ -1,11 +1,16 @@
 #[macro_use] extern crate rocket;
 
 use dotenvy::dotenv;
-use rocket::fs::FileServer;
+use log::LevelFilter;
 use rocket::http::CookieJar;
 use rocket_db_pools::mongodb;
 use rocket_db_pools::Database;
 use rocket_dyn_templates::Template;
+use simplelog::ColorChoice;
+use simplelog::CombinedLogger;
+use simplelog::Config;
+use simplelog::TermLogger;
+use simplelog::TerminalMode;
 use crate::routes::games::download::get_file;
 use crate::routes::games::upload::achievement_upload;
 use crate::routes::games::upload::achievement_upload_i;
@@ -16,6 +21,8 @@ use crate::routes::profile::keys::create_profile_keys;
 use crate::routes::profile::keys::delete_profile_keys;
 use crate::routes::profile::keys::profile_keys;
 use crate::routes::profile::profile::profile;
+use crate::routes::profile::upload::profile_upload;
+use crate::routes::profile::upload::profile_upload_i;
 mod access_key;
 mod routes;
 mod user;
@@ -59,6 +66,11 @@ fn index(cookies: &CookieJar<'_>,) -> String {
 #[launch]
 fn rocket() -> _ {
     dotenv().ok();
+    CombinedLogger::init(
+        vec![
+            TermLogger::new(LevelFilter::Debug, Config::default(), TerminalMode::Mixed, ColorChoice::Auto),
+        ]
+    ).unwrap();
     // let title_ids_file = str::from_utf8(include_bytes!(".././assets/titleids.json")).unwrap();
     // let titles: Vec<TitleInfo> = serde_json::from_str(title_ids_file).unwrap();
 
@@ -90,6 +102,8 @@ fn rocket() -> _ {
         game_upload,
         achievement_upload,
         achievement_upload_i,
+        profile_upload,
+        profile_upload_i,
         get_file
     ])
     .mount("/", openapi_get_routes![])

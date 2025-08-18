@@ -1,7 +1,7 @@
 pub mod activity;
 pub mod schm_achivements;
 pub mod schm_game;
-// pub mod feed_info;
+pub mod schm_profile;
 
 // pub fn add(left: u64, right: u64) -> u64 {
 //     left + right

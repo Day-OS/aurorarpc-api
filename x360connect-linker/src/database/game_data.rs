@@ -1,7 +1,6 @@
 use anyhow::Ok;
 use reqwest::StatusCode;
 use x360connect_global::{activity::Activity, schm_achivements, schm_game};
-use std::fmt::format;
 use std::future::Future;
 use std::pin::Pin;
 

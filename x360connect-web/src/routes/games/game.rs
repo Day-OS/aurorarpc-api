@@ -20,8 +20,8 @@ pub async fn game(
         })?.ok_or(Status::Forbidden)?;
         let mut picture = "assets/default_image.png".to_owned();
 
-        if let Some(index) = user.selected_profile{
-            let profile = user.profiles.get_index(index as usize);
+        if let Some(xuid) = user.selected_profile{
+            let profile = user.profiles.get(&xuid);
             if let Some(profile) = profile{
                 picture = profile.avatar_url.clone();
             }

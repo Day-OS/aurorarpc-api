@@ -4833,7 +4833,9 @@ dependencies = [
  "rocket_okapi",
  "serde",
  "serde_json",
+ "simplelog",
  "tera",
+ "url",
  "x360connect-global",
 ]
 
