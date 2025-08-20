@@ -4,11 +4,13 @@ use reqwest::StatusCode;
 use rocket::http::Status;
 use rocket_db_pools::mongodb::bson::{doc, oid::ObjectId};
 use serde::{Deserialize, Serialize};
+use url::Url;
 use x360connect_global::schm_game::{BoxArt, Images};
+use x360connect_global::DEFAULT_BIG_IMAGE;
 use x360connect_global::{schm_achivements, schm_game::SchmGame};
 use crate::rocket::futures::AsyncWriteExt;
 
-use crate::{document::{save, Document}, DATABASE_NAME};
+use crate::{modules::document::{save, Document}, DATABASE_NAME};
 
 pub(crate) const COLLECTION_NAME: &'static str = "game";
 
@@ -26,7 +28,7 @@ pub struct Game {
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)] 
 pub struct Achievement{
-    pub id: String,
+    pub id: u32,
     pub schema: schm_achivements::Achievement,
     pub icon_url: String,
 }
@@ -48,7 +50,7 @@ impl Document for Game{
 
 impl Game{
     pub async fn new(&self, db: &rocket_db_pools::mongodb::Client) -> anyhow::Result<()>{
-        crate::document::new(self, db).await?;
+        crate::modules::document::new(self, db).await?;
         Ok(())
     }
     pub async fn save(&self, db: &rocket_db_pools::mongodb::Client) -> anyhow::Result<()>{
@@ -79,7 +81,7 @@ impl Game{
                 return icon.clone()
             }
         }
-        return "xbox-360-logo".to_owned()
+        return DEFAULT_BIG_IMAGE.to_owned()
     }
 
     pub async fn upload_own_images(&mut self, db: &rocket_db_pools::mongodb::Client) -> anyhow::Result<()>{
@@ -128,6 +130,7 @@ impl Game{
 
 
     async fn _upload_image(&self, original_url: Option<String>, category: &str, db: &rocket_db_pools::mongodb::Client) -> anyhow::Result<Option<String>>{
+        log::debug!("Uploading {} image", category);
         if original_url.is_none(){
             return Ok(None);
         }
@@ -142,11 +145,21 @@ impl Game{
 
 async fn upload_image(db: &rocket_db_pools::mongodb::Client, original_url: String, file_name: String) -> anyhow::Result<()>{
     let client = reqwest::Client::new();
-    let response = client.get(original_url).send().await?;
+    
+    // If the URL of the image is not an actual URL, then we just ignore it
+    if Url::parse(&original_url).is_err(){
+        return Ok(())
+    }
+
+    let response = client.get(original_url.clone()).send().await.map_err(|e|{
+        log::error!("Error while trying to send request to download image from Aurora | URL:{original_url}");
+        e
+    })?;
     let status = response.status();
 
     if status != StatusCode::OK{
-        return Err(anyhow!(status))
+        log::error!("Error while trying to gather image from Aurora | URL:{original_url} - status: {status:#?}");
+        return Err(anyhow!(status));
     }
     
     let buf = response.bytes().await?;
@@ -154,11 +167,11 @@ async fn upload_image(db: &rocket_db_pools::mongodb::Client, original_url: Strin
     let bucket = db.database(DATABASE_NAME).gridfs_bucket(None);
     let mut upload_stream = bucket.open_upload_stream(file_name.clone(), None);
     upload_stream.write_all(&buf).await.map_err(|e|{
-        log::error!("{e}");
+        log::error!("Error while trying to write into upload stream {e}");
         anyhow!(Status::InternalServerError)
     })?;
     upload_stream.close().await.map_err(|e|{
-        log::error!("{e}");
+        log::error!("Error while trying to close upload_stream {e}");
         anyhow!(Status::InternalServerError)
     })?;
 

@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  web:
+    image: aurorarpc-api:latest
+    build: .
+    ports:
+      - "${ROCKET_PORT}:${ROCKET_PORT}"
+    environment:
+      - ROCKET_ADDRESS=${ROCKET_ADDRESS}
+      - ROCKET_PORT=${ROCKET_PORT}
+      - ROCKET_SECRET_KEY=${ROCKET_SECRET_KEY}
+      - ROCKET_DATABASES=${ROCKET_DATABASES}
+      - ROCKET_LOG_LEVEL=${ROCKET_LOG_LEVEL}
+      - RUST_BACKTRACE=${RUST_BACKTRACE}
+      - OAUTH_ID=${OAUTH_ID}
+      - OAUTH_SECRET=${OAUTH_SECRET}
+      - OAUTH_URL=${OAUTH_URL}
+    depends_on:
+      - mongodb
+    networks:
+      - backend
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:latest
+    expose:
+      - "27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
+    volumes:
+      - mongodb_data:/data/db
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    networks:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:
+
+networks:
+  backend:
+    driver: bridge

@@ -1,11 +1,14 @@
-use std::{collections::HashSet, vec};
+use std::{collections::{HashMap, HashSet}, vec};
 
 use ordermap::OrderSet;
 use rocket::http::CookieJar;
 use rocket_db_pools::mongodb::bson::{doc, oid::ObjectId, DateTime};
 use serde::{Deserialize, Serialize};
 
-use crate::{document::{save, Document}, user::permission::Permission, utils::generate_key, DATABASE_NAME};
+use crate::{modules::{
+    document::{save, Document},
+    user::permission::Permission,
+}, utils::generate_key, DATABASE_NAME};
 
 pub(crate) const COLLECTION_NAME: &'static str = "user";
 
@@ -18,8 +21,8 @@ pub struct User {
     #[serde(rename = "_id", skip_serializing_if = "Option::is_none")] 
     pub id: Option<ObjectId>, 
     pub discord_id: String,
-    pub profiles: OrderSet<Profile>,
-    pub selected_profile: Option<u8>,
+    pub profiles: HashMap<String, Profile>,
+    pub selected_profile: Option<String>,
     pub username: String,
     pub nickname: String,
     pub access_keys: OrderSet<AccessKey>,
@@ -35,17 +38,13 @@ pub struct AccessKey{
 }
 
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)] 
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)] 
 pub struct Profile { 
-    pub name: String,
-    pub gamerpoints: u32,
     pub avatar_url: String,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)] 
-pub struct GameRecord { 
-    pub game_id: String,
-    pub achievements: Vec<u8>
+    pub gamertag: String,
+    pub gamerscore: u32,
+    pub needs_picture_update: bool, // This means the user has marked the profile to be reuploaded
+    pub game_record: HashMap<String, Vec<u8>>
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -92,7 +91,7 @@ impl User{
         let user: User = User{
                 id: None,
                 discord_id: id,
-                profiles: OrderSet::new(),
+                profiles: HashMap::new(),
                 selected_profile: None,
                 username: username.clone(),
                 nickname: username,
@@ -107,6 +106,10 @@ impl User{
             .await?;
 
         Ok(user)
+    }
+
+    pub fn profile_image_name(&self, xuid: String) -> String{
+        format!("profile_{}_{}", self.discord_id, xuid)
     }
 
     pub async fn find_user_by_key(db: &rocket_db_pools::mongodb::Client, key: String) -> anyhow::Result<Option<User>>{
