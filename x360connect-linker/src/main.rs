@@ -29,7 +29,7 @@ struct Args {
 
 #[derive(Serialize, Deserialize)]
 struct AppConfig{
-    token: Option<String>,
+    key: Option<String>,
     api_url: Option<String>,
     user: String,
     password: String,
@@ -38,7 +38,7 @@ impl Default for AppConfig{
     fn default() -> Self {
         Self { 
             api_url: Some("http://xbox.daytheipc.com".to_string()),
-            token: None,
+            key: None,
             user: "xboxhttp".to_string(),
             password: "xboxhttp".to_string()
         }
@@ -74,12 +74,24 @@ async fn main_loop(rpc: &mut RPC, settings: &AppConfig) -> anyhow::Result<()>{
             match game_data {
                 Some(ref data) => {
                     let data = data.clone();
+                    let mut profile_image = None;
+                    let mut small_url = None;
+                    let mut small_text = None;
+                    if let Some(player) = data.player{
+                        profile_image = Some(player.picture);
+                        small_url = Some(player.url);
+                        small_text = Some(player.name);
+                    }
+
                     rpc.start(
                         Activity{
                             //state: Some("???".to_string()),
                             details: Some(data.title.clone()),
                             assets: Some(ActivityAssets{
                                 large_image: Some(data.icon.clone()),
+                                small_image: profile_image,
+                                small_url,
+                                small_text,
                                 //small_image: Some("http://xbox.daytheipc.com/assets/icons/4A5707D2.png".to_string()),
                                 ..Default::default()
 
@@ -94,7 +106,7 @@ async fn main_loop(rpc: &mut RPC, settings: &AppConfig) -> anyhow::Result<()>{
                 },
                 None => {
                     let game_id_trimmed = &title.titleid[2..].to_owned();
-                    let data = game_data::get_activity_information(&game_id_trimmed, &url, api_url.clone(), token.clone(), settings.token.clone()).await;
+                    let data = game_data::get_activity_information(&game_id_trimmed, &url, api_url.clone(), &token.clone(), settings.key.clone()).await;
                     match data {
                         Ok(activity) => {game_data = Some(activity);},
                         Err(e) => log::error!("{e}"),
@@ -153,7 +165,7 @@ async fn main() -> anyhow::Result<()> {
             Some(api_url) => {
                 match verify_key(api_url, key.clone()).await? {
                     true => {
-                        settings.token = Some(key.clone());
+                        settings.key = Some(key.clone());
                         settings.save(config_path.to_string())?;
                         info!("Key {key} registered!");
                     },
@@ -175,24 +187,24 @@ async fn main() -> anyhow::Result<()> {
     }
 
     // In case the user has an outdated key that does not work anymore
-    if let Some(key) = settings.token.clone() && let Some(url) = settings.api_url.clone(){
+    if let Some(key) = settings.key.clone() && let Some(url) = settings.api_url.clone(){
         match verify_key(url.clone(), key).await {
             Ok(was_successful) => {
                 if !was_successful{
-                    settings.token = None;
+                    settings.key = None;
                     settings.save(config_path.to_string())?;
                     return Err(anyhow::anyhow!("The current key seems to be either invalid or expired. Please, insert a new key using the '--key' parameter! "))
                 }
             },
             Err(e) => {
-                settings.token = None;
+                settings.key = None;
                 settings.save(config_path.to_string())?;
                 return Err(anyhow::anyhow!("{e}"))
             },
         };
     }
 
-    if settings.token.is_none() && args.key.is_none(){
+    if settings.key.is_none() && args.key.is_none(){
         info!("NO KEY FOUND!");
         info!(
             "Running this software without being logged may not show some images from games that \

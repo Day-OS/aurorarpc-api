@@ -5,7 +5,7 @@ use oauth2::{
 };
 use rocket_okapi::openapi;
 
-use crate::user::authenticate::oauth_client;
+use crate::modules::user::authenticate::oauth_client;
 
 #[openapi(tag = "Login")]
 #[get("/login-req")]

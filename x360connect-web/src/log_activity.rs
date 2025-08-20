@@ -1,7 +1,7 @@
 use rocket_db_pools::mongodb::bson::{doc, oid::ObjectId};
 use serde::{Deserialize, Serialize};
 
-use crate::{document::{new, save, Document}, DATABASE_NAME};
+use crate::{modules::document::{new, Document}, DATABASE_NAME};
 
 pub(crate) const COLLECTION_NAME: &'static str = "log";
 
@@ -22,6 +22,10 @@ pub enum LogType{
         game_id: String,
     },
     UploadGameAchievementInfo{
+        game_id: String,
+        id: String,
+    },
+    UploadGameAchievementImage{
         game_id: String,
         id: String,
     }

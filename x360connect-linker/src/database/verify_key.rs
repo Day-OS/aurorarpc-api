@@ -1,11 +1,9 @@
 use anyhow::Ok;
-use reqwest::{header::{HeaderMap, HeaderValue}, StatusCode};
+use reqwest::StatusCode;
 
 
 pub async fn verify_key(api_url: String, key: String) -> anyhow::Result<bool> {    
     let client = reqwest::Client::new();
-    
-    let mut map = HeaderMap::new();
     
     let status_code: reqwest::StatusCode = client
         .get(api_url.clone() + "/keys/verify")

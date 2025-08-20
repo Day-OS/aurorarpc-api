@@ -1,7 +1,7 @@
 use rocket::{futures::AsyncReadExt, http::{ContentType, Status}};
 use rocket_db_pools::Connection;
 
-use crate::{game::model::Game, MongoDB, DATABASE_NAME};
+use crate::{MongoDB, DATABASE_NAME};
 
 
 #[get("/file/<file_name>")]
