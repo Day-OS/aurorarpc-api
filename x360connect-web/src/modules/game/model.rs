@@ -6,6 +6,7 @@ use rocket_db_pools::mongodb::bson::{doc, oid::ObjectId};
 use serde::{Deserialize, Serialize};
 use url::Url;
 use x360connect_global::schm_game::{BoxArt, Images};
+use x360connect_global::DEFAULT_BIG_IMAGE;
 use x360connect_global::{schm_achivements, schm_game::SchmGame};
 use crate::rocket::futures::AsyncWriteExt;
 
@@ -80,7 +81,7 @@ impl Game{
                 return icon.clone()
             }
         }
-        return "xbox-360-logo".to_owned()
+        return DEFAULT_BIG_IMAGE.to_owned()
     }
 
     pub async fn upload_own_images(&mut self, db: &rocket_db_pools::mongodb::Client) -> anyhow::Result<()>{

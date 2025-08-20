@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use rocket::{data::ToByteUnit, futures::AsyncWriteExt, http::Status, serde::json::Json, tokio::io::AsyncReadExt, Data};
 use rocket_db_pools::Connection;
-use x360connect_global::schm_profile::{SchmProfile, SchmProfileUploadResponse};
+use x360connect_global::{schm_profile::{SchmProfile, SchmProfileUploadResponse}, DEFAULT_AVATAR_IMAGE};
 
 use crate::{access_key::AccessKeyGuard, modules::user::model::{Profile, User}, MongoDB, DATABASE_NAME};
 
@@ -44,7 +44,7 @@ pub async fn profile_upload<'r>(
                 game_record.insert(current_game_id.clone(), in_profile.achievements);
                 // In case the profile is unknown, generate it and mark it as in need to be updated
                 let new_profile = Profile { 
-                    avatar_url: "".to_string(), 
+                    avatar_url: DEFAULT_AVATAR_IMAGE.to_string(), 
                     gamertag: in_profile.base.gamertag,
                     gamerscore: in_profile.base.gamerscore,
                     needs_picture_update: true,
@@ -52,11 +52,20 @@ pub async fn profile_upload<'r>(
                 };
                 profiles_that_needs_picture_update.push(xuid.clone());
 
-                user.profiles.insert(xuid, new_profile);
+                user.profiles.insert(xuid.clone(), new_profile);
             },
         }
 
+        if user.selected_profile.is_none(){
+            user.selected_profile = Some(xuid.clone());
+        }
     }
+
+
+    user.save(&db).await.map_err(|e|{
+        log::error!("Could not save user after profile upload {e}");
+        Status::InternalServerError
+    })?;
 
     Ok(
         rocket::serde::json::Json(
@@ -74,10 +83,19 @@ pub async fn profile_upload_i<'r>(
     image: Data<'_>
 ) -> Result<Status, Status> {
    
-    let user = User::find_user_by_key(&db, access_key.0).await.map_err(|e|{
+    let mut user = User::find_user_by_key(&db, access_key.0).await.map_err(|e|{
         log::error!("{e}");
         Status::InternalServerError
     })?.ok_or(Status::Forbidden)?;
+
+    let profile_opt = user.profiles.get(&xuid);
+
+    if profile_opt.is_none(){
+        return Err(Status::NoContent)
+    }
+
+    let mut profile = profile_opt.unwrap().clone();
+    
 
     let mut buf = Vec::new();
     image.open(10.mebibytes()).read_to_end(&mut buf).await.unwrap();
@@ -93,6 +111,16 @@ pub async fn profile_upload_i<'r>(
         Status::InternalServerError
     })?;
     upload_stream.close().await.map_err(|e|{
+        log::error!("{e}");
+        Status::InternalServerError
+    })?;
+
+    
+    profile.needs_picture_update = false;
+    profile.avatar_url = user.profile_image_name(xuid.clone());
+    user.profiles.insert(xuid, profile);
+
+    user.save(&db).await.map_err(|e|{
         log::error!("{e}");
         Status::InternalServerError
     })?;

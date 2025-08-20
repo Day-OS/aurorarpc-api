@@ -1,6 +1,6 @@
 use rocket::{http::Status, response::content::RawJson};
 use rocket_db_pools::Connection;
-use x360connect_global::activity::{Activity, Player};
+use x360connect_global::{activity::{Activity, Player}, DEFAULT_AVATAR_IMAGE};
 
 use crate::{access_key::OptionalAccessKeyGuard, modules::{game::model::Game, user::model::User}, MongoDB};
 
@@ -11,14 +11,14 @@ pub async fn game(
     db: Connection<MongoDB>
 ) -> Result<RawJson<String>, Status> {
     let mut player = None;
-    
     if let Some(key) = access_key.0{
         let user = User::find_user_by_key(&db, key).await.map_err(|e|{
             log::error!("{e}");
             Status::InternalServerError
 
         })?.ok_or(Status::Forbidden)?;
-        let mut picture = "assets/default_image.png".to_owned();
+
+        let mut picture = DEFAULT_AVATAR_IMAGE.to_owned();
 
         if let Some(xuid) = user.selected_profile{
             let profile = user.profiles.get(&xuid);
