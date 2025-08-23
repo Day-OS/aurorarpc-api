@@ -7,25 +7,6 @@ use std::pin::Pin;
 
 use crate::database::profile_data::feed_profile_information;
 
-pub async fn get_schm_game(xbox_url: &String, token: &String) -> anyhow::Result<schm_game::SchmGame>{
-    log::debug!("Getting game data from Nova");
-
-    let client = reqwest::Client::new();
-    let url = xbox_url.clone() + "/title/live/cache"; 
-    let resp = client
-        .get(url.clone())
-        .bearer_auth(token)
-        .send()
-        .await?;
-
-    if resp.status() != StatusCode::OK {
-        log::error!("Could not gather game data from {url} - Status code: {}", resp.status());
-        return Err(anyhow::anyhow!(resp.status()));
-    }
-
-    Ok(resp.json::<schm_game::SchmGame>().await?)
-}
-
 pub async fn get_schm_achievement(xbox_url: &String, token: &String) -> anyhow::Result<Vec<schm_achivements::Achievement>>{
     log::debug!("Getting achievement data from Nova");
 
@@ -66,31 +47,35 @@ pub async fn get_icon_achievement(xbox_url: String, uuid: u16, token: &String) -
 }
 
 pub async fn feed_game_information(
-    game_id: &String, 
+    game_id: &i64, 
     xbox_url: &String, 
     api_url: &String, 
     xbtoken: &String, 
-    api_token: &String) -> anyhow::Result<()>{
-    let game: schm_game::SchmGame = get_schm_game(xbox_url, xbtoken).await?;
-    let achievements = get_schm_achievement(xbox_url, xbtoken).await?;
-    log::debug!("Starting to feed game information");
+    api_key: &String
+) -> anyhow::Result<()>{
+    log::debug!("Checking if the game is missing achievements.");
     let client = reqwest::Client::new();
-    let game_json = serde_json::to_string(&game)?;
-    let url = api_url.clone() + "/game_upload/" + &game_id;
+    let url = api_url.clone() + "/achievement_upload/" + &game_id.to_string();
     let resp = client
-        .post(url.clone())
+        .get(url.clone())
         .header("Content-Type", "application/json")
-        .bearer_auth(api_token)
-        .body(game_json)
+        .bearer_auth(api_key)
         .send()
         .await.map_err(|e|{
-            log::error!("Could not send game_upload request at url {url} - {e}");
+            log::error!("Could not verify if the game needs achievements to be uploaded{url} - {e}");
             e
         })?;
     
-    if resp.status() != StatusCode::OK{
-        return Err(anyhow::anyhow!(resp.status()));
+    let status = resp.status();
+
+    if status == StatusCode::OK{
+        return Ok(())
     }
+    
+    if status != StatusCode::NO_CONTENT{
+        return Err(anyhow::anyhow!(status))
+    }
+    let achievements = get_schm_achievement(xbox_url, xbtoken).await?;
 
     for achievement in achievements{
         let achievement_json = serde_json::to_string(&achievement)?;
@@ -98,9 +83,9 @@ pub async fn feed_game_information(
         let icon = get_icon_achievement(xbox_url.clone(), achievement.imageid.clone(), xbtoken).await?;
 
         let resp = client
-        .post(api_url.clone() + "/achievement_upload/" + &game_id)
+        .post(api_url.clone() + "/achievement_upload/" + &game_id.to_string())
         .header("Content-Type", "application/json")
-        .bearer_auth(api_token)
+        .bearer_auth(api_key)
         .body(achievement_json)
         .send()
         .await?;
@@ -110,9 +95,9 @@ pub async fn feed_game_information(
         }
         let image_id = achievement.imageid.to_string();
         let resp = client
-        .post(api_url.clone() + "/achievement_upload_i/" + &game_id + "/" + &image_id)
+        .post(api_url.clone() + "/achievement_upload_i/" + &game_id.to_string() + "/" + &image_id)
         .header("Content-Type", "image/png")
-        .bearer_auth(api_token)
+        .bearer_auth(api_key)
         .body(icon)
         .send()
         .await?;
@@ -129,33 +114,12 @@ pub async fn feed_game_information(
 
 }
 
-// This MIGHT work for now, but not for long
-// In the eventual day Microsoft decides to simply delete everything
-// from their database, this will become useless
-pub async fn get_local_game_info(
-    xbox_url: &String,
-    xbtoken: &String,
-
-) -> anyhow::Result<Activity> {
-    let game: schm_game::SchmGame = get_schm_game(&xbox_url, &xbtoken).await?;
-    let mut icon = None;
-    if let Some(images) = game.images {
-        if let Some(_icon) = images.icon {
-            icon = Some(_icon);
-        }
-    }
-    let icon = icon.unwrap_or(DEFAULT_BIG_IMAGE.to_owned());
-    let activity = Activity {
-        title: game.fulltitle.unwrap_or("Undefined".to_owned()),
-        icon,
-        player: None,
-    };
-    Ok(activity)
+fn generic_activity(title_id: String) -> Activity{
+    Activity { title: title_id, icon: DEFAULT_BIG_IMAGE.to_owned(), player: None }
 }
 
-
 pub fn get_activity_information(
-    game_id: &String,
+    game_id: &i64,
     xbox_url: &String,
     api_url: Option<String>,
     xbtoken: &String,
@@ -172,7 +136,7 @@ pub fn get_activity_information(
         // First try to get it from the website 
         if let Some(api_url) = api_url{
             let client = reqwest::Client::new();
-            let mut builder = client.get(api_url.clone() + "/game/" + &game_id);
+            let mut builder = client.get(api_url.clone() + "/game/" + &game_id.to_string());
             if let Some(apikey) = apikey.clone() {
                 builder = builder.bearer_auth(apikey);
             }
@@ -183,6 +147,12 @@ pub fn get_activity_information(
             let status = resp.status();
             if status == StatusCode::OK {
                 log::debug!("Title {} was found in the API registries", game_id);
+
+                // Attempt to fill achievements in case it does not have
+                if let Some(key) = apikey.clone(){
+                    feed_game_information(&game_id.to_owned(), &xbox_url, &api_url, &xbtoken.clone(), &key.clone()).await?;
+                }
+
 
                 //In the case the game was correctly found, return the activity generated
                 let mut result = resp.json::<Activity>().await?;
@@ -199,7 +169,7 @@ pub fn get_activity_information(
 
                 // If user have an access key, then try to update their profiles with all logged ones
                 if let Some(apikey) = apikey.clone(){
-                    feed_profile_information(&game_id, &xbox_url, &api_url, &xbtoken, &apikey).await?;
+                    feed_profile_information(&game_id.to_string(), &xbox_url, &api_url, &xbtoken, &apikey).await?;
                 }
                 
 
@@ -208,27 +178,15 @@ pub fn get_activity_information(
 
             //In the eventual case the game was not feeded to the api yet, we feed it!
             if status == StatusCode::NOT_FOUND {
-                log::debug!("Title {} was NOT found in the API registries.\nFeeding game information to the API", game_id);
-                let apikey_clone = apikey.clone();
-                match apikey_clone {
-                    Some(ref token) => {
-                        feed_game_information(&game_id.to_owned(), &xbox_url, &api_url, &xbtoken.clone(), &token.clone()).await?;
-                    },
-                    None => {
-                        return  get_local_game_info(&xbox_url, &xbtoken).await;
-                    },
-                }
-
-                // and try again!
-                return get_activity_information(&game_id.to_owned(), &xbox_url, Some(api_url), &xbtoken, apikey).await;
+                log::debug!("Title {} was NOT found in the API registries.", game_id);
+                return Ok(generic_activity(game_id.to_string()))
             }
         }
         
         // This is the case were any other issue happens, so we just assume
         // the server is not operational, we do it locally!
-        log::debug!("API could not be reached, showing local data.");
+        log::debug!("API could not be reached.");
 
-        
-        get_local_game_info(&xbox_url, &xbtoken).await
+        return Ok(generic_activity(game_id.to_string()))
     })
 }

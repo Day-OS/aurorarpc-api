@@ -1,8 +1,13 @@
 #[macro_use] extern crate rocket;
+use std::path::Path;
 
+use rocket::fairing::AdHoc;
 use dotenvy::dotenv;
 use log::LevelFilter;
+use rocket::fairing;
 use rocket::http::CookieJar;
+use rocket::Build;
+use rocket::Rocket;
 use rocket_db_pools::mongodb;
 use rocket_db_pools::Database;
 use rocket_dyn_templates::Template;
@@ -11,10 +16,11 @@ use simplelog::CombinedLogger;
 use simplelog::Config;
 use simplelog::TermLogger;
 use simplelog::TerminalMode;
+use crate::modules::database_status::DatabaseStatus;
 use crate::routes::games::download::get_file;
-use crate::routes::games::upload::achievement_upload;
+use crate::routes::games::upload::are_achievements_uploaded;
 use crate::routes::games::upload::achievement_upload_i;
-use crate::routes::games::upload::game_upload;
+// use crate::routes::games::upload::game_upload;
 use crate::routes::keys::verify_key;
 use crate::routes::login_req::login_req;
 use crate::routes::profile::keys::create_profile_keys;
@@ -39,6 +45,22 @@ use routes::{login::login, auth::auth};
 struct MongoDB(mongodb::Client);
 
 const DATABASE_NAME: &'static str = "xboxrpc";
+
+
+async fn database_startup(rocket: Rocket<Build>) -> fairing::Result {
+    if let Some(db) = MongoDB::fetch(&rocket) {
+        let mut database = DatabaseStatus::get(&db).await.unwrap();
+        if !database.games_filled{
+            let path = Path::new("./assets/xbox-assets/games.json");
+            crate::modules::game::fill_data::fill_data(path, &db).await.unwrap();
+            database.games_filled = true;
+            database.save(&db).await.unwrap();
+        }
+        Ok(rocket)
+    } else {
+        Err(rocket)
+    }
+}
 
 
 
@@ -89,6 +111,7 @@ fn rocket() -> _ {
     rocket::build()
     .attach(Template::fairing())
     .attach(MongoDB::init())
+    .attach(AdHoc::try_on_ignite("Database Startup", database_startup))
     // .manage(title_ids)
     // .mount("/assets", FileServer::from("./assets"))
     .mount("/", routes![
@@ -97,8 +120,8 @@ fn rocket() -> _ {
         profile, profile_keys,
         create_profile_keys, delete_profile_keys,
         verify_key,
-        game_upload,
-        achievement_upload,
+        // game_upload,
+        are_achievements_uploaded,
         achievement_upload_i,
         profile_upload,
         profile_upload_i,

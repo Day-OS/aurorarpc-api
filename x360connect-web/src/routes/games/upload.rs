@@ -1,78 +1,47 @@
-use ordermap::OrderSet;
 use rocket::{data::ToByteUnit, futures::AsyncWriteExt, http::Status, serde::json::Json, tokio::io::AsyncReadExt, Data};
 use rocket_db_pools::Connection;
-use x360connect_global::{schm_achivements, schm_game::SchmGame};
+use x360connect_global::schm_achivements;
 
-use crate::{access_key::AccessKeyGuard, log_activity::Log, modules::{game::model::{Achievement, Game}, user::model::User}, MongoDB, DATABASE_NAME};
+use crate::{access_key::AccessKeyGuard, log_activity::Log, modules::game::model::{Achievement, Game}, MongoDB, DATABASE_NAME};
 
-#[post("/game_upload/<id>", data = "<input>")]
-pub async fn game_upload<'r>(
-    id: &str,
+
+#[get("/achievement_upload/<id>")]
+pub async fn are_achievements_uploaded<'r>(
+    id: i64,
     access_key: AccessKeyGuard,
     db: Connection<MongoDB>,
-    input: Json<SchmGame>
 ) -> Result<Status, Status> {
-   
-    let user = User::find_user_by_key(&db, access_key.0).await.map_err(|e|{
-        log::error!("{e}");
-        Status::InternalServerError
-    })?.ok_or(Status::Forbidden)?;
-
-    let game_already_exists = Game::find_by_id(&db, id.to_owned())
+    let game = Game::find_by_id(&db, id)
         .await.map_err(|e|{
             error!("{e}");
             Status::InternalServerError
-        })?;
-    
-    if game_already_exists.is_some(){
-        return Err(Status::Conflict);
-    }
-
-    let mut game = Game{ 
-        id: None, 
-        game_id: id.to_string(), 
-        schema: input.into_inner(), 
-        achievements: OrderSet::new()
-    };
-
-    game.upload_own_images(&db).await.map_err(|e|{
-        error!("Error while trying to change the source of the images from game {} - {e}", game.get_name());
-        Status::InternalServerError
     })?;
 
-    _ = game.new(&db).await.map_err(|e|{
-        log::error!("Could not save game. {e}");
-    });
-
-    let log = Log{ 
-        id: None, 
-        discord_id: user.discord_id, 
-        log_type: crate::log_activity::LogType::UploadGameInfo { game_id: id.to_string() } 
-    };
-    _ = log.new(&db).await.map_err(|e|{
-        log::error!("Could not save log. {e}");
-    });
-    
-
-    Ok(
-        Status::Ok
-    )
+    match game{
+        Some(game) => {
+            if game.achievements_were_downloaded{
+                Ok(Status::Ok)
+            }
+            else{
+                Ok(Status::NoContent)
+            }
+        },
+        None => 
+        return Err(Status::NotFound),
+    }
 }
 
 #[post("/achievement_upload/<id>", data = "<input>")]
 pub async fn achievement_upload<'r>(
-    id: String,
+    id: i64,
     access_key: AccessKeyGuard,
     db: Connection<MongoDB>,
     input: Json<schm_achivements::Achievement>
 ) -> Result<Status, Status> {
    
-    let user = User::find_user_by_key(&db, access_key.0).await.map_err(|e|{
-        log::error!("{e}");
-        Status::InternalServerError
-    })?.ok_or(Status::Forbidden)?;
+    let user = access_key.0;
 
-    let game_already_exists = Game::find_by_id(&db, id.to_owned())
+    let game_already_exists = Game::find_by_id(&db, id)
         .await.map_err(|e|{
             error!("{e}");
             Status::InternalServerError
@@ -116,22 +85,19 @@ pub async fn achievement_upload<'r>(
 
 #[post("/achievement_upload_i/<id>/<uuid>", data = "<image>")]
 pub async fn achievement_upload_i<'r>(
-    id: String,
+    id: i64,
     uuid: String,
     access_key: AccessKeyGuard,
     db: Connection<MongoDB>,
     image: Data<'_>
 ) -> Result<Status, Status> {
    
-    let user = User::find_user_by_key(&db, access_key.0).await.map_err(|e|{
-        log::error!("{e}");
-        Status::InternalServerError
-    })?.ok_or(Status::Forbidden)?;
+    let user = access_key.0;
 
     let mut buf = Vec::new();
     image.open(10.mebibytes()).read_to_end(&mut buf).await.unwrap();
 
-    let game = Game::find_by_id(&db, id.clone()).await.map_err(|e|{
+    let game = Game::find_by_id(&db, id).await.map_err(|e|{
         log::error!("{e}");
         Status::InternalServerError
     })?.ok_or(Status::NotFound)?;

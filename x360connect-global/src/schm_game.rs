@@ -2,8 +2,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SchmGame {
-    pub fulltitle: Option<String>,
-    pub title_id: Option<i64>,
+    pub fulltitle: String,
+    pub title_id: i64,
     pub description: Option<String>,
     pub categories: Option<Vec<Category>>,
     pub reduced_title: Option<String>,

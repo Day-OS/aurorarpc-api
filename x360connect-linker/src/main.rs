@@ -106,7 +106,8 @@ async fn main_loop(rpc: &mut RPC, settings: &AppConfig) -> anyhow::Result<()>{
                 },
                 None => {
                     let game_id_trimmed = &title.titleid[2..].to_owned();
-                    let data = game_data::get_activity_information(&game_id_trimmed, &url, api_url.clone(), &token.clone(), settings.key.clone()).await;
+                    let game_id = i64::from_str_radix(game_id_trimmed, 16).unwrap();
+                    let data = game_data::get_activity_information(&game_id, &url, api_url.clone(), &token.clone(), settings.key.clone()).await;
                     match data {
                         Ok(activity) => {game_data = Some(activity);},
                         Err(e) => log::error!("{e}"),
