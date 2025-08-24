@@ -1,7 +1,7 @@
 use anyhow::Ok;
 use reqwest::StatusCode;
 use x360connect_global::{DEFAULT_AVATAR_IMAGE, DEFAULT_BIG_IMAGE};
-use x360connect_global::{activity::Activity, schm_achivements, schm_game};
+use x360connect_global::{activity::Activity, schm_achivements};
 use std::future::Future;
 use std::pin::Pin;
 
@@ -77,39 +77,34 @@ pub async fn feed_game_information(
     }
     let achievements = get_schm_achievement(xbox_url, xbtoken).await?;
 
-    for achievement in achievements{
-        let achievement_json = serde_json::to_string(&achievement)?;
-
-        let icon = get_icon_achievement(xbox_url.clone(), achievement.imageid.clone(), xbtoken).await?;
-
-        let resp = client
+    // Upload all achievements
+    let achievements_json = serde_json::to_string(&achievements)?;
+    let resp = client
         .post(api_url.clone() + "/achievement_upload/" + &game_id.to_string())
         .header("Content-Type", "application/json")
         .bearer_auth(api_key)
-        .body(achievement_json)
+        .body(achievements_json)
         .send()
         .await?;
-        if resp.status() != StatusCode::OK{
-            log::warn!("Got {} while uploading achievement", resp.status());
-            continue;
-        }
-        let image_id = achievement.imageid.to_string();
+    if resp.status() != StatusCode::OK{
+        log::warn!("Got {} while uploading achievements", resp.status());
+    }
+
+    // Upload each achievement image
+    for achievement in achievements{
+        let icon = get_icon_achievement(xbox_url.clone(), achievement.imageid.clone(), xbtoken).await?;
+        let id = achievement.id.to_string();
         let resp = client
-        .post(api_url.clone() + "/achievement_upload_i/" + &game_id.to_string() + "/" + &image_id)
+        .post(api_url.clone() + "/achievement_upload_i/" + &game_id.to_string() + "/" + &id)
         .header("Content-Type", "image/png")
         .bearer_auth(api_key)
         .body(icon)
         .send()
         .await?;
         if resp.status() != StatusCode::OK{
-            log::warn!("Got {} while uploading image for achievement {}", resp.status(), image_id);
+            log::warn!("Got {} while uploading image for achievement {}", resp.status(), id);
         }
-
     }
-    
-
-
-
     Ok(())
 
 }
@@ -136,7 +131,7 @@ pub fn get_activity_information(
         // First try to get it from the website 
         if let Some(api_url) = api_url{
             let client = reqwest::Client::new();
-            let mut builder = client.get(api_url.clone() + "/game/" + &game_id.to_string());
+            let mut builder = client.get(api_url.clone() + "/activity/game/" + &game_id.to_string());
             if let Some(apikey) = apikey.clone() {
                 builder = builder.bearer_auth(apikey);
             }

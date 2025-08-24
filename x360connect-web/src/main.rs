@@ -18,6 +18,7 @@ use simplelog::TermLogger;
 use simplelog::TerminalMode;
 use crate::modules::database_status::DatabaseStatus;
 use crate::routes::games::download::get_file;
+use crate::routes::games::upload::achievement_upload;
 use crate::routes::games::upload::are_achievements_uploaded;
 use crate::routes::games::upload::achievement_upload_i;
 // use crate::routes::games::upload::game_upload;
@@ -115,13 +116,14 @@ fn rocket() -> _ {
     // .manage(title_ids)
     // .mount("/assets", FileServer::from("./assets"))
     .mount("/", routes![
-        index, games::game::game, auth, 
+        index, games::activity_game::activity_game, auth, 
         login, login_req, 
         profile, profile_keys,
         create_profile_keys, delete_profile_keys,
         verify_key,
         // game_upload,
         are_achievements_uploaded,
+        achievement_upload,
         achievement_upload_i,
         profile_upload,
         profile_upload_i,

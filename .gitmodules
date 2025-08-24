@@ -1,0 +1,3 @@
+[submodule "x360connect-web/assets/xbox-assets"]
+	path = x360connect-web/assets/xbox-assets
+	url = https://git.daytheipc.com/DayOS/xbox-assets

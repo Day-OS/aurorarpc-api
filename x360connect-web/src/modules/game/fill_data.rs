@@ -1,6 +1,4 @@
-use std::path::Path;
-
-use ordermap::OrderSet;
+use std::{collections::HashMap, path::Path};
 use rocket::tokio;
 use x360connect_global::schm_game::SchmGame;
 
@@ -20,7 +18,7 @@ pub async fn fill_data(json_path: &Path, db: &rocket_db_pools::mongodb::Client) 
             schema: game, 
             images_were_downloaded: false,
             achievements_were_downloaded: false,
-            achievements: OrderSet::new(),
+            achievements: HashMap::new(),
         }.new(&db).await?;
     }
 

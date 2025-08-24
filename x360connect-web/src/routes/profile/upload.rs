@@ -28,7 +28,7 @@ pub async fn profile_upload<'r>(
             Some(profile) => {
                 profile.gamerscore = in_profile.base.gamerscore;
                 // In case the profile is already registered, just update the game record data
-                profile.game_record.insert(current_game_id.clone(), in_profile.achievements);
+                profile.game_record.insert(current_game_id.clone().to_string(), in_profile.achievements);
 
                 // Does this logged avatar need to have its picture updated?
                 if profile.needs_picture_update{
@@ -38,7 +38,7 @@ pub async fn profile_upload<'r>(
             },
             None => {
                 let mut game_record = HashMap::new();
-                game_record.insert(current_game_id.clone(), in_profile.achievements);
+                game_record.insert(current_game_id.clone().to_string(), in_profile.achievements);
                 // In case the profile is unknown, generate it and mark it as in need to be updated
                 let new_profile = Profile { 
                     avatar_url: DEFAULT_AVATAR_IMAGE.to_string(), 

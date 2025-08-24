@@ -23,11 +23,10 @@ pub enum LogType{
     },
     UploadGameAchievementInfo{
         game_id: i64,
-        id: String,
     },
     UploadGameAchievementImage{
         game_id: i64,
-        id: String,
+        id: u32,
     }
 }
 

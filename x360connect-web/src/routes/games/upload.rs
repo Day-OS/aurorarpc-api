@@ -8,7 +8,7 @@ use crate::{access_key::AccessKeyGuard, log_activity::Log, modules::game::model:
 #[get("/achievement_upload/<id>")]
 pub async fn are_achievements_uploaded<'r>(
     id: i64,
-    access_key: AccessKeyGuard,
+    _access_key: AccessKeyGuard,
     db: Connection<MongoDB>,
 ) -> Result<Status, Status> {
     let game = Game::find_by_id(&db, id)
@@ -36,7 +36,7 @@ pub async fn achievement_upload<'r>(
     id: i64,
     access_key: AccessKeyGuard,
     db: Connection<MongoDB>,
-    input: Json<schm_achivements::Achievement>
+    input: Json<Vec<schm_achivements::Achievement>>
 ) -> Result<Status, Status> {
    
     let user = access_key.0;
@@ -52,25 +52,31 @@ pub async fn achievement_upload<'r>(
     }
 
     let mut game = game_already_exists.unwrap();
-    let image_id = input.0.imageid.to_string();
-    let url = game.achivement_image_name(image_id.clone());
 
-    let achievement = Achievement{ 
-        id: input.0.id.clone(), 
-        schema: input.into_inner(), 
-        icon_url: url
-    };
+    if game.achievements_were_downloaded{
+        return Err(Status::Conflict);
+    }
 
-    game.achievements.insert(achievement);
+    for achievement in input.0{
+        let id = achievement.id.clone();
+        let result = Achievement{ 
+            schema: achievement, 
+            icon_url: None
+        };
+        game.achievements.insert(id.to_string(), result);
+    }
 
+    game.achievements_were_downloaded = true;
+    let game_copy = game.clone();
     _ = game.save(&db).await.map_err(|e|{
         log::error!("Could not save game. {e}");
+        log::error!("Could not save game. {game_copy:?}");
     });
 
     let log = Log{ 
         id: None, 
         discord_id: user.discord_id, 
-        log_type: crate::log_activity::LogType::UploadGameAchievementInfo { game_id: id, id: image_id }
+        log_type: crate::log_activity::LogType::UploadGameAchievementInfo { game_id: id }
     };
     _ = log.new(&db).await.map_err(|e|{
         log::error!("Could not save log. {e}");
@@ -86,23 +92,40 @@ pub async fn achievement_upload<'r>(
 #[post("/achievement_upload_i/<id>/<uuid>", data = "<image>")]
 pub async fn achievement_upload_i<'r>(
     id: i64,
-    uuid: String,
+    uuid: u32,
     access_key: AccessKeyGuard,
     db: Connection<MongoDB>,
     image: Data<'_>
-) -> Result<Status, Status> {
-   
+) -> Result<Status, Status> {   
     let user = access_key.0;
 
     let mut buf = Vec::new();
     image.open(10.mebibytes()).read_to_end(&mut buf).await.unwrap();
 
-    let game = Game::find_by_id(&db, id).await.map_err(|e|{
+    let mut game = Game::find_by_id(&db, id).await.map_err(|e|{
         log::error!("{e}");
         Status::InternalServerError
     })?.ok_or(Status::NotFound)?;
+    let file_name = game.achivement_image_name(uuid.to_owned());
 
-    let file_name = game.achivement_image_name(uuid.clone());
+    let achievements = game.achievements.get_mut(&uuid.to_string());
+
+    if achievements.is_none(){
+        return Err(Status::NotFound)
+    }
+
+    let achievement = achievements.unwrap();
+
+    if achievement.icon_url.is_some(){
+        return Err(Status::Conflict)
+    }
+    
+    achievement.icon_url = Some(file_name.clone());
+
+    game.save(&db).await.map_err(|e|{
+        log::error!("{e}");
+        Status::InternalServerError
+    })?;
 
     let bucket = db.database(DATABASE_NAME).gridfs_bucket(None);
     let mut upload_stream = bucket.open_upload_stream(file_name, None);

@@ -4,8 +4,8 @@ use x360connect_global::{activity::{Activity, Player}, DEFAULT_AVATAR_IMAGE};
 
 use crate::{access_key::OptionalAccessKeyGuard, modules::game::model::Game, MongoDB};
 
-#[get("/game/<id>")]
-pub async fn game(
+#[get("/activity/game/<id>")]
+pub async fn activity_game(
     id: i64,
     access_key: OptionalAccessKeyGuard,
     db: Connection<MongoDB>
@@ -31,12 +31,24 @@ pub async fn game(
         
     }
     
-    let game = Game::find_by_id(&db, id).await.map_err(|e| {
+    let mut game = Game::find_by_id(&db, id).await.map_err(|e| {
         println!("{e}");
         Status::InternalServerError
     })?.ok_or(
         Status::NotFound
     )?;
+
+    if !game.images_were_downloaded{
+        game.upload_own_images(&db).await.map_err(|e|{
+            log::error!("Failed to upload own images of a game - {e}");
+            Status::InternalServerError
+        })?;
+        game.achievements_were_downloaded = true;
+        game.save(&db).await.map_err(|e|{
+            log::error!("Failed to save a game - {e}");
+            Status::InternalServerError
+        })?;
+    }
 
     let activity = Activity{ title: game.get_name(), icon: game.get_icon_url(), player: player};
     let json = serde_json::to_string(&activity).map_err(|e| {

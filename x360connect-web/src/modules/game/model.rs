@@ -1,5 +1,4 @@
 use anyhow::{anyhow, Ok};
-use ordermap::OrderSet;
 use reqwest::StatusCode;
 use rocket::http::Status;
 use rocket_db_pools::mongodb::bson::{doc, oid::ObjectId};
@@ -9,6 +8,7 @@ use x360connect_global::schm_game::Images;
 use x360connect_global::DEFAULT_BIG_IMAGE;
 use x360connect_global::{schm_achivements, schm_game::SchmGame};
 use crate::rocket::futures::AsyncWriteExt;
+use std::collections::HashMap;
 
 use crate::{modules::document::{save, Document}, DATABASE_NAME};
 
@@ -24,15 +24,14 @@ pub struct Game {
     pub schema: SchmGame,
     pub images_were_downloaded: bool,
     pub achievements_were_downloaded: bool,
-    pub achievements: OrderSet<Achievement>
+    pub achievements: HashMap<String, Achievement>
 }
 
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)] 
 pub struct Achievement{
-    pub id: u32,
     pub schema: schm_achivements::Achievement,
-    pub icon_url: String,
+    pub icon_url: Option<String>,
 }
 
 impl Document for Game{
@@ -67,7 +66,7 @@ impl Game{
         Ok(collection.find_one(doc!{ "game_id": id }, None).await?)
     }
 
-    pub fn achivement_image_name(&self, uuid: String) -> String{
+    pub fn achivement_image_name(&self, uuid: u32) -> String{
         format!("{}_achievement_{}", self.game_id, uuid)
     }
 

@@ -44,7 +44,7 @@ pub struct Profile {
     pub gamertag: String,
     pub gamerscore: u32,
     pub needs_picture_update: bool, // This means the user has marked the profile to be reuploaded
-    pub game_record: HashMap<i64, Vec<u8>>
+    pub game_record: HashMap<String, Vec<u8>>
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
