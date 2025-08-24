@@ -4,7 +4,7 @@ use rocket::{data::ToByteUnit, futures::AsyncWriteExt, http::Status, serde::json
 use rocket_db_pools::Connection;
 use x360connect_global::{schm_profile::{SchmProfile, SchmProfileUploadResponse}, DEFAULT_AVATAR_IMAGE};
 
-use crate::{access_key::AccessKeyGuard, modules::user::model::{Profile, User}, MongoDB, DATABASE_NAME};
+use crate::{access_key::AccessKeyGuard, modules::user::model::Profile, MongoDB, DATABASE_NAME};
 
 #[post("/profile_upload", data = "<input>")]
 pub async fn profile_upload<'r>(
@@ -13,15 +13,12 @@ pub async fn profile_upload<'r>(
     input: Json<SchmProfile>
 ) -> Result<Json<SchmProfileUploadResponse>, Status> {
    
-    let mut user = User::find_user_by_key(&db, access_key.0).await.map_err(|e|{
-        log::error!("{e}");
-        Status::InternalServerError
-    })?.ok_or(Status::Forbidden)?;
+    let mut user = access_key.0;
 
     let mut profiles_that_needs_picture_update = vec![];
 
     let profile_input = input.0;
-    let current_game_id = profile_input.current_game.clone();
+    let current_game_id = i64::from_str_radix(&profile_input.current_game, 16).unwrap();
 
     // Go through the list and check who needs an update
     for in_profile in profile_input.profiles{
@@ -31,7 +28,7 @@ pub async fn profile_upload<'r>(
             Some(profile) => {
                 profile.gamerscore = in_profile.base.gamerscore;
                 // In case the profile is already registered, just update the game record data
-                profile.game_record.insert(current_game_id.clone(), in_profile.achievements);
+                profile.game_record.insert(current_game_id.clone().to_string(), in_profile.achievements);
 
                 // Does this logged avatar need to have its picture updated?
                 if profile.needs_picture_update{
@@ -41,7 +38,7 @@ pub async fn profile_upload<'r>(
             },
             None => {
                 let mut game_record = HashMap::new();
-                game_record.insert(current_game_id.clone(), in_profile.achievements);
+                game_record.insert(current_game_id.clone().to_string(), in_profile.achievements);
                 // In case the profile is unknown, generate it and mark it as in need to be updated
                 let new_profile = Profile { 
                     avatar_url: DEFAULT_AVATAR_IMAGE.to_string(), 
@@ -83,10 +80,7 @@ pub async fn profile_upload_i<'r>(
     image: Data<'_>
 ) -> Result<Status, Status> {
    
-    let mut user = User::find_user_by_key(&db, access_key.0).await.map_err(|e|{
-        log::error!("{e}");
-        Status::InternalServerError
-    })?.ok_or(Status::Forbidden)?;
+    let mut user = access_key.0;
 
     let profile_opt = user.profiles.get(&xuid);
 

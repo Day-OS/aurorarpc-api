@@ -1,3 +1,4 @@
 /target
 .env
 config.toml
+x360-dumper/games.json

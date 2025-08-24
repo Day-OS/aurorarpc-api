@@ -1,0 +1,14 @@
+[package]
+name = "x360-dumper"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+x360connect-global = {path = "../x360connect-global"}
+anyhow = "1.0.99"
+roxmltree = "0.20.0"
+serde = "1.0.219"
+reqwest = "0.12.23"
+tokio = { version = "1", features = ["full"] }
+serde_json = "1.0.143"
+rand = "0.9.2"

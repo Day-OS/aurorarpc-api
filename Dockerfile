@@ -17,6 +17,7 @@ WORKDIR /app
 
 COPY --from=builder /app/x360connect-web/target/release/x360connect-web .
 COPY --from=builder /app/x360connect-web/templates ./templates
+COPY --from=builder /app/x360connect-web/assets ./assets
 COPY --from=builder /app/x360connect-web/Rocket.toml ./Rocket.toml
 EXPOSE 8000
 

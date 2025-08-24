@@ -1,14 +1,14 @@
 use anyhow::{anyhow, Ok};
-use ordermap::OrderSet;
 use reqwest::StatusCode;
 use rocket::http::Status;
 use rocket_db_pools::mongodb::bson::{doc, oid::ObjectId};
 use serde::{Deserialize, Serialize};
 use url::Url;
-use x360connect_global::schm_game::{BoxArt, Images};
+use x360connect_global::schm_game::Images;
 use x360connect_global::DEFAULT_BIG_IMAGE;
 use x360connect_global::{schm_achivements, schm_game::SchmGame};
 use crate::rocket::futures::AsyncWriteExt;
+use std::collections::HashMap;
 
 use crate::{modules::document::{save, Document}, DATABASE_NAME};
 
@@ -20,17 +20,18 @@ pub(crate) const COLLECTION_NAME: &'static str = "game";
 pub struct Game { 
     #[serde(rename = "_id", skip_serializing_if = "Option::is_none")] 
     pub id: Option<ObjectId>, 
-    pub game_id: String,
+    pub game_id: i64,
     pub schema: SchmGame,
-    pub achievements: OrderSet<Achievement>
+    pub images_were_downloaded: bool,
+    pub achievements_were_downloaded: bool,
+    pub achievements: HashMap<String, Achievement>
 }
 
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)] 
 pub struct Achievement{
-    pub id: u32,
     pub schema: schm_achivements::Achievement,
-    pub icon_url: String,
+    pub icon_url: Option<String>,
 }
 
 impl Document for Game{
@@ -59,21 +60,18 @@ impl Game{
     }
 
 
-    pub async fn find_by_id(db: &rocket_db_pools::mongodb::Client,id: String) -> anyhow::Result<Option<Self>>{
+    pub async fn find_by_id(db: &rocket_db_pools::mongodb::Client,id: i64) -> anyhow::Result<Option<Self>>{
         let collection = db.database(DATABASE_NAME)
             .collection::<Self>(COLLECTION_NAME);
         Ok(collection.find_one(doc!{ "game_id": id }, None).await?)
     }
 
-    pub fn achivement_image_name(&self, uuid: String) -> String{
+    pub fn achivement_image_name(&self, uuid: u32) -> String{
         format!("{}_achievement_{}", self.game_id, uuid)
     }
 
     pub fn get_name(&self) -> String{
-        self.schema.fulltitle.clone().unwrap_or(
-            self.schema.title_id.clone()
-            .unwrap_or("Undefined".to_owned()
-        ))
+        self.schema.fulltitle.clone()
     }
     pub fn get_icon_url(&self) -> String{
         if let Some(images) = &self.schema.images{
@@ -90,37 +88,15 @@ impl Game{
         }
     
         let new_images = if let Some(images) = self.schema.images.clone() {
-            let mut new_screenshots = vec![];
-            if let Some(screenshots) = images.screenshots.clone() {
-                for (i, image) in screenshots.iter().enumerate() {
-                    let image_name = format!("screenshot_{}", i);
-                    let uploaded = self._upload_image(Some(image.clone()), &image_name, db).await?;
-                    if let Some(url) = uploaded {
-                        new_screenshots.push(url);
-                    }
-                }
-            }
-            let mut box_art = None;
-            if let Some(boxart) = images.boxart{
-                box_art = Some(BoxArt{
-                    small: self._upload_image(boxart.small.clone(), "boxart_small", db).await?,
-                    large: self._upload_image(boxart.large.clone(), "boxart_large", db).await?,
-                })
-            }
-
             Images {
-                screenshots: Some(new_screenshots),
-                boxart: box_art,
+                boxart: self._upload_image(images.boxart.clone(), "boxart", db).await?,
                 icon: self._upload_image(images.icon.clone(), "icon", db).await?,
-                background: self._upload_image(images.background.clone(), "background", db).await?,
                 banner: self._upload_image(images.banner.clone(), "banner", db).await?,
             }
         } else {
             Images {
-                screenshots: None,
                 boxart: None,
                 icon: None,
-                background: None,
                 banner: None,
             }
         };

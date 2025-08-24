@@ -19,15 +19,14 @@ pub struct Log {
 #[serde(tag = "type")]
 pub enum LogType{
     UploadGameInfo{
-        game_id: String,
+        game_id: i64,
     },
     UploadGameAchievementInfo{
-        game_id: String,
-        id: String,
+        game_id: i64,
     },
     UploadGameAchievementImage{
-        game_id: String,
-        id: String,
+        game_id: i64,
+        id: u32,
     }
 }
 
