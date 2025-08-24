@@ -27,6 +27,6 @@ pub async fn get_avatar(url: String, token: String) -> anyhow::Result<Profile> {
 
     Ok(Profile{
         base: profiles.first().unwrap().clone(),
-    avatar: format!("{url}") // NEED TO MAKE AN UPLOAD THING...
+        avatar: format!("{url}")
     })
 }

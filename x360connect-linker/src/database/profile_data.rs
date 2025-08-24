@@ -123,20 +123,21 @@ pub async fn feed_profile_information(
     for profile in need_update_profile{
         let image = get_icon_profile(xbox_url, profile.base.index, xbtoken).await?;
 
+        let image = image::load_from_memory_with_format(&image, image::ImageFormat::Bmp)?;
+        let mut new_image = std::io::Cursor::new(Vec::new());
+
+        image.write_to(&mut new_image, image::ImageFormat::Png)?;
+        let new_image = new_image.into_inner();
         let resp = client
         .post(api_url.clone() + "/profile_upload_i/" + &profile.base.xuid)
         .header("Content-Type", "image/png")
         .bearer_auth(api_token)
-        .body(image)
+        .body(new_image)
         .send()
         .await?;
         if resp.status() != StatusCode::OK{
             log::warn!("Got {} while uploading profile picture", resp.status());
         }
     }
-    
-
-
-
     Ok(())
 }
