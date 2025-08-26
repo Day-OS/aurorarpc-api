@@ -1,0 +1,33 @@
+@import 'reset';
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+main {
+    flex: 1 0 auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    background: 
+        linear-gradient(to top, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.7) 20%,  rgba(255,255,255,0) 45%, rgba(255,255,255,0) 100%),
+        url('/assets/xbox-assets/background.jpg') no-repeat center center;
+    background-size: cover;
+    padding: 2.5%;
+}
+
+footer {
+    flex-shrink: 0;
+    width: 100%;
+}

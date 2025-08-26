@@ -1,0 +1,69 @@
+{% extends "base" %}
+{% block body %}
+    <script defer>
+        function playSound(src) {
+            const sound = new Audio(src);
+            sound.play();
+        }
+
+        let bar_index = 0;
+        let tabs = [];
+        document.addEventListener('DOMContentLoaded', function() {
+            let pages = document.getElementById("tabs");
+            let pageElements = pages.querySelectorAll('ul li a');
+            pageElements.forEach(function(page) {
+            tabs.push(page);
+            });
+            pageElements.forEach(function(page, idx) {
+            page.addEventListener('click', function() {
+                if (bar_index > idx){
+                playSound('/assets/xbox-assets/sfx/PageLeft.mp3');
+                }
+                if (bar_index < idx){
+                playSound('/assets/xbox-assets/sfx/PageRight.mp3');
+                }
+                bar_index = idx;
+
+                tabs.forEach(function(tab) {
+                    tab.classList.remove('tab-selected');
+                });
+                page.classList.add('tab-selected');
+            });
+            });
+        });
+    </script>
+    <div id="tabs" class="tabs">
+        <ul>
+            <li><a href="#home">home</a></li>
+            <li><a href="#social">social</a></li>
+            <li><a href="#games">games</a></li>
+            <li><a href="#settings">settings</a></li>
+        </ul>
+    </div>
+
+    <div id="pages">
+        <div class="page" id="home" hx-get="/home" hx-trigger="load" hx-swap="innerHTML">
+            <object type="image/svg+xml" data="/assets/images/ring-resize.svg" class="loader">
+                Your browser does not support SVGs.
+            </object>
+        </div>
+        <div class="page" id="social" hx-get="/profile" hx-trigger="revealed" hx-swap="innerHTML">
+            <object type="image/svg+xml" data="/assets/images/ring-resize.svg" class="loader">
+                Your browser does not support SVGs.
+            </object>
+        </div>
+        <div class="page" id="games" hx-get="/games" hx-trigger="revealed" hx-swap="innerHTML">
+            <object type="image/svg+xml" data="/assets/images/ring-resize.svg" class="loader">
+                Your browser does not support SVGs.
+            </object>
+        </div>
+        <div class="page" id="settings" hx-get="/settings" hx-trigger="revealed" hx-swap="innerHTML">
+            <object type="image/svg+xml" data="/assets/images/ring-resize.svg" class="loader">
+                Your browser does not support SVGs.
+            </object>
+        </div>
+    </div>
+    {% block index_body %}{% endblock index_body %}
+{% endblock body %}
+
+    

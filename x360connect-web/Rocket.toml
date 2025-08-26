@@ -1,6 +1,9 @@
 [default]
 address = "0.0.0.0"
 port = 8000
+sass_dir = "assets/sass"
+css_dir = "assets/css"
+
 
 [default.databases.xboxrpc]
 url = "mongodb://localhost:27017"

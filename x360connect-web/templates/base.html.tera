@@ -3,12 +3,22 @@
 <head>
     <meta charset='utf-8'>
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <meta name="darkreader-lock">
     <title>360Connect</title>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.6/dist/htmx.min.js"></script>
     <script src="https://unpkg.com/hyperscript.org@0.9.14"></script>
+    <link rel="stylesheet" href="/assets/css/base.css">
+    <link rel="stylesheet" href="/assets/css/index.css">
 </head>
 <body>
-    {% block body %}{% endblock body %}
+    <main>
+        {% block body %}{% endblock body %}
+    </main>
+    <footer>
+        <p style="font-size: 0.9em; color: #888; text-align: center;">
+            This project is an independent fan initiative and is not affiliated with Microsoft or Xbox Unity in any way.
+        </p>
+    </footer>
 </body>
 </html>

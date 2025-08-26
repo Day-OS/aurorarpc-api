@@ -1,8 +1,27 @@
-{% extends "base" %}
-{% block body %}
-    <h1>Profile</h1>
-    <div id="tokens" hx-get="/profile/keys" hx-swap="innerHTML" hx-trigger="load, refreshTokens"></div>
+<div class="profile-screen">
+    <div class="profile-sidebuttons">
+        <button class="grid-button">
+            <div class="button-img">
+                <img src="/assets/images/login.svg" alt="Login">
+            </div>
+            <div class="button-text">Sign in or Out</div>
+        </button>
+    </div>
+    <div class="profile-info">
 
-{% endblock body %}
+        {{user.nickname}}
 
-    
+        {% set profile =  user.profiles[user.selected_profile] %}
+        <img src="/file/{{ profile.avatar_url }}" alt="">
+        {{profile.gamertag}}
+        {{profile.gamerscore}}
+        {{ profile }}
+    </div>
+</div>
+
+
+{# 
+{% for key, profile in user.profiles %}
+    {{key}} {{profile}}
+{% endfor %} #}
+{# <div id="tokens" hx-get="/profile/keys" hx-swap="innerHTML" hx-trigger="load, refreshTokens"></div> #}

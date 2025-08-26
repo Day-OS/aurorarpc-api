@@ -1,0 +1,164 @@
+@font-face {
+    font-family: 'Segoe UI';
+    src: url('/assets/fonts/segoe/segoe-ui-light.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+.loader{
+    width: 10vw;
+    filter: brightness(0) invert(1) opacity(0.5);
+}
+
+
+.tabs {
+    width: 100%;
+
+    ul {
+        display: flex;
+        width: 100%;
+        padding: 0;
+        margin: 0;
+        list-style: none;
+        li {
+            flex: 1 1 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            a {
+                font-family: 'Segoe UI', Arial, sans-serif;
+                text-align: center;
+                font-size: clamp(1rem, 5vw, 2.5rem);
+                text-decoration: none;
+                text-shadow: none;
+                color: darkgray;
+                transition: text-shadow 0.05s;
+                text-shadow: 0 0 2px rgba(0, 0, 0, 0.7);
+
+                &:hover {
+                    color: white;
+                }
+            }
+
+            .tab-selected{
+                color: white;
+            }
+        }
+    }
+}
+
+/* container horizontal */
+#pages {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    width: 100%;
+    height: 100%;
+
+    & {
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE and Edge */
+    }
+
+    .page {
+        flex: none;
+        width: 100%;
+        height: 100%;
+        scroll-snap-align: start;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 2rem;
+    }
+}
+
+.profile-screen {
+    width: calc(100% - 4rem);
+    height: calc(100% - 4rem);
+    margin: 2rem;
+    display: flex;
+    flex-direction: row;
+
+    @media (max-width: 768px) {
+        flex-direction: column-reverse;
+        overflow-y: auto;
+    }
+
+    .profile-info {
+        flex: 0 0 75%;
+        display: flex;
+        flex-direction: column-reverse;
+        align-items: center;
+
+        img {
+            max-width: 20vw;
+            display: block;
+            margin: 0 auto;
+        }
+    }
+
+    .profile-sidebuttons {
+        flex: 0 0 25%;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-end;
+
+        .grid-button {
+            height: 20vh;
+        }
+    }
+}
+.grid-button {
+    margin: 2vh;
+    border-color: transparent;
+    background: linear-gradient(
+        130deg,
+        #00a100 100%,
+    );
+    color: #fff; // Ensure text is visible
+    transition: background 0.1s, transform 0.1s;
+    will-change: transform;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: stretch;
+    width: 100%;
+    height: 100%;
+    text-decoration: none;
+
+
+    .button-img {
+        img{
+            width: 2rem;
+        }
+        margin: 0.5vw;
+        display: flex;
+        flex-direction: row-reverse;
+        flex: 1 1 0;
+    }
+    .button-text{
+        text-decoration: none;
+        font-size: 1.5rem;
+        flex: 1 1 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    &:hover {
+        background: linear-gradient(
+            130deg,
+            #43c445 20%,
+            #00a100 90%
+        );
+        color: #fff; // Keep text visible on hover
+        transform: scale(1.08);
+        z-index: 1;
+        cursor: pointer;
+    }
+}

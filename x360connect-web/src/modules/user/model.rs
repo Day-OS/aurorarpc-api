@@ -12,8 +12,12 @@ use crate::{modules::{
 
 pub(crate) const COLLECTION_NAME: &'static str = "user";
 
-
-
+#[derive(Debug, Serialize, Deserialize, Clone)] 
+pub enum ProfileStatus{
+    Visible,
+    Banned,
+    Hidden,
+}
 
 #[derive(Debug, Serialize, Deserialize, Clone)] 
 #[serde(crate = "rocket::serde")] 
@@ -27,7 +31,8 @@ pub struct User {
     pub nickname: String,
     pub access_keys: OrderSet<AccessKey>,
     pub screen_captures: Vec<ScreenCapture>,
-    pub permissions: HashSet<Permission>
+    pub permissions: HashSet<Permission>,
+    pub status: ProfileStatus,
 }
 
 
@@ -97,7 +102,8 @@ impl User{
                 nickname: username,
                 screen_captures: vec![],
                 access_keys: OrderSet::new(),
-                permissions: HashSet::new()
+                permissions: HashSet::new(),
+                status: ProfileStatus::Visible
             };
 
         db.database(DATABASE_NAME)

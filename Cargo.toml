@@ -1,3 +1,3 @@
 [workspace]
 resolver = "3"
-members = ["x360connect-web", "x360connect-linker", "x360connect-global", "x360-dumper"]
+members = ["x360connect-web", "x360connect-linker", "x360connect-global", "x360connect-dumper"]

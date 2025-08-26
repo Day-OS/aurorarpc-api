@@ -1,9 +1,15 @@
-{% extends "base" %}
-{% block body %}
-    <h1>Login</h1>
-    <a href="/login-req">
-    LOGIN
-    </a>
-{% endblock body %}
+<div class="profile-screen">
+    <div class="profile-sidebuttons">
+        <a href="/login-req" class="grid-button">
+            <div class="button-img">
+                <img src="/assets/images/login.svg" alt="Login">
+            </div>
+            <div class="button-text">Sign in</div>
+        </a>
+        
+    </div>
+    <div class="profile-info">
+        <img src="/assets/xbox-assets/images/AvatarSilhouette.png" alt="Avatar Silhouette" />
+    </div>
+</div>
 
-    
